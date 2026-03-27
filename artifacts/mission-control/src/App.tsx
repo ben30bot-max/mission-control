@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { Layout } from "@/components/Layout";
 import Dashboard from "@/pages/Dashboard";
+import Projects from "@/pages/Projects";
 import Tasks from "@/pages/Tasks";
 import Logs from "@/pages/Logs";
 import Memory from "@/pages/Memory";
@@ -24,6 +25,7 @@ function Router() {
     <Layout>
       <Switch>
         <Route path="/" component={Dashboard} />
+        <Route path="/projects" component={Projects} />
         <Route path="/tasks" component={Tasks} />
         <Route path="/logs" component={Logs} />
         <Route path="/memory" component={Memory} />

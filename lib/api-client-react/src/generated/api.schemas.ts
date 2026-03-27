@@ -176,6 +176,109 @@ export interface CreateMemoryRequest {
   category?: string | null;
 }
 
+export type ProjectStatus = (typeof ProjectStatus)[keyof typeof ProjectStatus];
+
+export const ProjectStatus = {
+  active: "active",
+  planned: "planned",
+  blocked: "blocked",
+  on_hold: "on_hold",
+  done: "done",
+} as const;
+
+export type ProjectPriority =
+  (typeof ProjectPriority)[keyof typeof ProjectPriority];
+
+export const ProjectPriority = {
+  critical: "critical",
+  high: "high",
+  medium: "medium",
+  low: "low",
+} as const;
+
+export interface Project {
+  id: number;
+  name: string;
+  status: ProjectStatus;
+  priority: ProjectPriority;
+  owner?: string | null;
+  nextStep?: string | null;
+  description?: string | null;
+  dueDate?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateProjectRequestStatus =
+  (typeof CreateProjectRequestStatus)[keyof typeof CreateProjectRequestStatus];
+
+export const CreateProjectRequestStatus = {
+  active: "active",
+  planned: "planned",
+  blocked: "blocked",
+  on_hold: "on_hold",
+  done: "done",
+} as const;
+
+export type CreateProjectRequestPriority =
+  (typeof CreateProjectRequestPriority)[keyof typeof CreateProjectRequestPriority];
+
+export const CreateProjectRequestPriority = {
+  critical: "critical",
+  high: "high",
+  medium: "medium",
+  low: "low",
+} as const;
+
+export interface CreateProjectRequest {
+  name: string;
+  status?: CreateProjectRequestStatus;
+  priority?: CreateProjectRequestPriority;
+  owner?: string | null;
+  nextStep?: string | null;
+  description?: string | null;
+  dueDate?: string | null;
+}
+
+export type UpdateProjectRequestStatus =
+  (typeof UpdateProjectRequestStatus)[keyof typeof UpdateProjectRequestStatus];
+
+export const UpdateProjectRequestStatus = {
+  active: "active",
+  planned: "planned",
+  blocked: "blocked",
+  on_hold: "on_hold",
+  done: "done",
+} as const;
+
+export type UpdateProjectRequestPriority =
+  (typeof UpdateProjectRequestPriority)[keyof typeof UpdateProjectRequestPriority];
+
+export const UpdateProjectRequestPriority = {
+  critical: "critical",
+  high: "high",
+  medium: "medium",
+  low: "low",
+} as const;
+
+export interface UpdateProjectRequest {
+  name?: string;
+  status?: UpdateProjectRequestStatus;
+  priority?: UpdateProjectRequestPriority;
+  owner?: string | null;
+  nextStep?: string | null;
+  description?: string | null;
+  dueDate?: string | null;
+}
+
+export interface UpdateProjectParams {
+  id: number;
+}
+
+export interface DeleteProjectParams {
+  id: number;
+}
+
 export type GetLogsParams = {
   limit?: number;
   level?: GetLogsLevel;

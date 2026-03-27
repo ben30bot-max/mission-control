@@ -112,6 +112,14 @@ Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used b
 
 Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
 
+### Pages (Mission Control)
+
+- **Overview** (`/`) — 3-column dashboard: Active Now, Needs Attention, Up Next
+- **Projects** (`/projects`) — Project tracking with status grouping (Active, Blocked, Planned, On Hold, Done). Blocked items surface first. Inline edit/delete. Create via "+ New project" form.
+- **Tasks** (`/tasks`) — Task list with priority and status management
+- **Logs** (`/logs`) — Activity log stream with level filtering
+- **Memory** (`/memory`) — Key/value memory store for Ben's context
+
 ### `scripts` (`@workspace/scripts`)
 
 Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.

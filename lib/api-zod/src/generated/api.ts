@@ -197,3 +197,79 @@ export const CreateMemoryBody = zod.object({
 export const DeleteMemoryParams = zod.object({
   id: zod.coerce.number(),
 });
+
+/**
+ * @summary List all projects
+ */
+export const GetProjectsResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  status: zod.enum(["active", "planned", "blocked", "on_hold", "done"]),
+  priority: zod.enum(["critical", "high", "medium", "low"]),
+  owner: zod.string().nullish(),
+  nextStep: zod.string().nullish(),
+  description: zod.string().nullish(),
+  dueDate: zod.date().nullish(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
+});
+export const GetProjectsResponse = zod.array(GetProjectsResponseItem);
+
+/**
+ * @summary Create a project
+ */
+export const createProjectBodyStatusDefault = `planned`;
+export const createProjectBodyPriorityDefault = `medium`;
+
+export const CreateProjectBody = zod.object({
+  name: zod.string(),
+  status: zod
+    .enum(["active", "planned", "blocked", "on_hold", "done"])
+    .default(createProjectBodyStatusDefault),
+  priority: zod
+    .enum(["critical", "high", "medium", "low"])
+    .default(createProjectBodyPriorityDefault),
+  owner: zod.string().nullish(),
+  nextStep: zod.string().nullish(),
+  description: zod.string().nullish(),
+  dueDate: zod.date().nullish(),
+});
+
+/**
+ * @summary Update a project
+ */
+export const UpdateProjectParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateProjectBody = zod.object({
+  name: zod.string().optional(),
+  status: zod
+    .enum(["active", "planned", "blocked", "on_hold", "done"])
+    .optional(),
+  priority: zod.enum(["critical", "high", "medium", "low"]).optional(),
+  owner: zod.string().nullish(),
+  nextStep: zod.string().nullish(),
+  description: zod.string().nullish(),
+  dueDate: zod.date().nullish(),
+});
+
+export const UpdateProjectResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  status: zod.enum(["active", "planned", "blocked", "on_hold", "done"]),
+  priority: zod.enum(["critical", "high", "medium", "low"]),
+  owner: zod.string().nullish(),
+  nextStep: zod.string().nullish(),
+  description: zod.string().nullish(),
+  dueDate: zod.date().nullish(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
+});
+
+/**
+ * @summary Delete a project
+ */
+export const DeleteProjectParams = zod.object({
+  id: zod.coerce.number(),
+});

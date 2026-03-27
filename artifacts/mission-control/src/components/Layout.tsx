@@ -1,10 +1,11 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, ListTodo, Database, Terminal, Cpu } from "lucide-react";
+import { LayoutDashboard, ListTodo, Database, Terminal, Cpu, FolderKanban } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
+  { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/tasks", label: "Tasks", icon: ListTodo },
   { href: "/logs", label: "Logs", icon: Terminal },
   { href: "/memory", label: "Memory", icon: Database },
