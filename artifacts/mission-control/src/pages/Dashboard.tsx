@@ -1,201 +1,252 @@
 import React from "react";
 import { Link } from "wouter";
-import { useGetAgentStatus, useControlAgent, useGetTasks, useGetLogs } from "@workspace/api-client-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
-import { Play, Square, Pause, PlayCircle, Cpu, Clock, CheckCircle2, AlertTriangle, ArrowRight, Activity } from "lucide-react";
-import { motion } from "framer-motion";
-import { format } from "date-fns";
+import {
+  useGetAgentStatus,
+  useControlAgent,
+  useGetTasks,
+  useGetLogs,
+} from "@workspace/api-client-react";
+import { Play, Square, Pause, PlayCircle, AlertTriangle, ArrowRight, ChevronRight, Zap, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
 
-export default function Dashboard() {
-  const { data: agent, isLoading: agentLoading } = useGetAgentStatus({ query: { refetchInterval: 3000 } });
-  const { mutate: controlAgent, isPending: controlling } = useControlAgent();
-  const { data: tasks } = useGetTasks();
-  const { data: logs } = useGetLogs({ limit: 5 });
+function AgentBar() {
+  const { data: agent } = useGetAgentStatus({ query: { refetchInterval: 3000 } });
+  const { mutate: controlAgent, isPending } = useControlAgent();
 
-  const formatUptime = (seconds?: number) => {
-    if (!seconds) return "00:00:00";
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = Math.floor(seconds % 60);
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  const state = agent?.state ?? "idle";
+  const isActive = state === "active";
+  const isPaused = state === "paused";
+  const isStopped = state === "stopped" || state === "idle";
+
+  const stateColor: Record<string, string> = {
+    active: "text-emerald-400",
+    paused: "text-yellow-400",
+    stopped: "text-zinc-500",
+    idle: "text-zinc-500",
+    error: "text-red-400",
   };
 
-  const handleControl = (action: "start" | "stop" | "pause" | "resume") => {
-    controlAgent({ data: { action } });
+  const dotColor: Record<string, string> = {
+    active: "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]",
+    paused: "bg-yellow-400",
+    stopped: "bg-zinc-600",
+    idle: "bg-zinc-600",
+    error: "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]",
   };
-
-  if (agentLoading && !agent) {
-    return <div className="flex items-center justify-center h-full text-primary font-mono animate-pulse">INITIALIZING CORE...</div>;
-  }
-
-  const isRunning = agent?.state === 'active';
-  const isPaused = agent?.state === 'paused';
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
-      
-      {/* Top Section: Visual Core & Controls */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Agent Core Visual */}
-        <Card className="lg:col-span-1 flex flex-col items-center justify-center p-8 bg-gradient-to-br from-card to-background border-primary/20">
-          <div className="relative w-48 h-48 flex items-center justify-center mb-6">
-            <motion.div 
-              animate={{ rotate: 360 }} 
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }} 
-              className="absolute inset-0 rounded-full border-2 border-primary/20 border-dashed" 
-            />
-            <motion.div 
-              animate={{ rotate: -360 }} 
-              transition={{ duration: 15, repeat: Infinity, ease: "linear" }} 
-              className="absolute inset-4 rounded-full border border-primary/40 border-dotted opacity-50" 
-            />
-            <motion.div 
-              animate={isRunning ? { scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] } : {}} 
-              transition={{ duration: 2, repeat: Infinity }} 
-              className={`w-24 h-24 rounded-full blur-xl absolute ${isRunning ? 'bg-primary/30' : isPaused ? 'bg-warning/30' : 'bg-muted/30'}`} 
-            />
-            <Cpu className={`w-12 h-12 relative z-10 ${isRunning ? 'text-primary drop-shadow-[0_0_8px_rgba(0,229,255,1)]' : isPaused ? 'text-warning' : 'text-muted-foreground'}`} />
+    <div className="flex items-center justify-between px-6 py-3 border-b border-border bg-card/40 mb-8">
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <span className={cn("w-2 h-2 rounded-full", isActive && "animate-pulse", dotColor[state] ?? "bg-zinc-600")} />
+          <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest">Ben</span>
+          <span className={cn("text-xs font-mono font-bold uppercase tracking-widest", stateColor[state])}>
+            {state}
+          </span>
+        </div>
+        {agent?.currentTask && (
+          <span className="text-xs font-mono text-muted-foreground border-l border-border pl-4 truncate max-w-xs">
+            {agent.currentTask}
+          </span>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2">
+        {isStopped && (
+          <button
+            onClick={() => controlAgent({ data: { action: "start" } })}
+            disabled={isPending}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono uppercase tracking-wider bg-emerald-400/10 text-emerald-400 border border-emerald-400/30 rounded hover:bg-emerald-400/20 transition-colors disabled:opacity-50"
+          >
+            <Play className="w-3 h-3" /> Initialize
+          </button>
+        )}
+        {isActive && (
+          <button
+            onClick={() => controlAgent({ data: { action: "pause" } })}
+            disabled={isPending}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono uppercase tracking-wider bg-yellow-400/10 text-yellow-400 border border-yellow-400/30 rounded hover:bg-yellow-400/20 transition-colors disabled:opacity-50"
+          >
+            <Pause className="w-3 h-3" /> Pause
+          </button>
+        )}
+        {isPaused && (
+          <button
+            onClick={() => controlAgent({ data: { action: "resume" } })}
+            disabled={isPending}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono uppercase tracking-wider bg-emerald-400/10 text-emerald-400 border border-emerald-400/30 rounded hover:bg-emerald-400/20 transition-colors disabled:opacity-50"
+          >
+            <PlayCircle className="w-3 h-3" /> Resume
+          </button>
+        )}
+        {(isActive || isPaused) && (
+          <button
+            onClick={() => controlAgent({ data: { action: "stop" } })}
+            disabled={isPending}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono uppercase tracking-wider bg-red-500/10 text-red-400 border border-red-500/30 rounded hover:bg-red-500/20 transition-colors disabled:opacity-50"
+          >
+            <Square className="w-3 h-3" /> Stop
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const priorityOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+
+const priorityLabel: Record<string, string> = {
+  critical: "CRIT",
+  high: "HIGH",
+  medium: "MED",
+  low: "LOW",
+};
+
+const priorityColor: Record<string, string> = {
+  critical: "text-red-400 border-red-400/40 bg-red-400/5",
+  high: "text-orange-400 border-orange-400/40 bg-orange-400/5",
+  medium: "text-yellow-400 border-yellow-400/40 bg-yellow-400/5",
+  low: "text-zinc-500 border-zinc-600 bg-zinc-800/30",
+};
+
+export default function Dashboard() {
+  const { data: tasks } = useGetTasks({ query: { refetchInterval: 5000 } });
+  const { data: logs } = useGetLogs({ limit: 20 }, { query: { refetchInterval: 5000 } });
+
+  const active = (tasks ?? []).filter(t => t.status === "in_progress");
+  const failed = (tasks ?? []).filter(t => t.status === "failed");
+  const pending = (tasks ?? [])
+    .filter(t => t.status === "pending")
+    .sort((a, b) => (priorityOrder[a.priority] ?? 9) - (priorityOrder[b.priority] ?? 9));
+
+  const warnings = (logs ?? []).filter(l => l.level === "warning" || l.level === "error").slice(0, 5);
+
+  const needsAttention = [
+    ...failed.map(t => ({ type: "task" as const, id: `t-${t.id}`, label: t.title, detail: "Task failed", severity: "error" as const, ts: t.updatedAt })),
+    ...warnings.map(l => ({ type: "log" as const, id: `l-${l.id}`, label: l.message, detail: l.source ?? "system", severity: l.level as "warning" | "error", ts: l.createdAt })),
+  ].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime()).slice(0, 6);
+
+  return (
+    <div>
+      <AgentBar />
+
+      <div className="grid grid-cols-3 gap-6">
+        {/* ACTIVE NOW */}
+        <div>
+          <SectionHeader label="Active now" count={active.length} accent="emerald" />
+          <div className="space-y-2 mt-3">
+            {active.length === 0 ? (
+              <Empty label="Nothing running" />
+            ) : active.map(t => (
+              <TaskRow key={t.id} title={t.title} priority={t.priority} meta={`started ${formatDistanceToNow(new Date(t.updatedAt), { addSuffix: true })}`} pulse />
+            ))}
           </div>
-          
-          <h2 className="text-2xl font-display font-bold uppercase tracking-widest text-foreground mb-1">
-            Agent {agent?.name || "BEN"}
-          </h2>
-          <Badge variant={isRunning ? "success" : isPaused ? "warning" : "secondary"} className="mb-6">
-            {agent?.state || "UNKNOWN"}
-          </Badge>
+        </div>
 
-          <div className="grid grid-cols-2 gap-4 w-full">
-            {!isRunning && !isPaused && (
-              <Button onClick={() => handleControl("start")} disabled={controlling} className="col-span-2">
-                <Play className="w-4 h-4 mr-2" /> Initialize
-              </Button>
-            )}
-            {(isRunning || isPaused) && (
-              <>
-                {isRunning ? (
-                  <Button variant="warning" className="bg-warning/20 text-warning border-warning/50 hover:bg-warning/30" onClick={() => handleControl("pause")} disabled={controlling}>
-                    <Pause className="w-4 h-4 mr-2" /> Pause
-                  </Button>
-                ) : (
-                  <Button onClick={() => handleControl("resume")} disabled={controlling}>
-                    <PlayCircle className="w-4 h-4 mr-2" /> Resume
-                  </Button>
-                )}
-                <Button variant="destructive" onClick={() => handleControl("stop")} disabled={controlling}>
-                  <Square className="w-4 h-4 mr-2" /> Terminate
-                </Button>
-              </>
-            )}
+        {/* NEEDS ATTENTION */}
+        <div>
+          <SectionHeader label="Needs attention" count={needsAttention.length} accent="red" />
+          <div className="space-y-2 mt-3">
+            {needsAttention.length === 0 ? (
+              <Empty label="All clear" icon="check" />
+            ) : needsAttention.map(item => (
+              <AttentionRow
+                key={item.id}
+                label={item.label}
+                detail={item.detail}
+                severity={item.severity}
+                ts={item.ts}
+              />
+            ))}
           </div>
-        </Card>
+          {needsAttention.length > 0 && (
+            <Link href="/logs" className="flex items-center gap-1 mt-3 text-xs font-mono text-muted-foreground hover:text-primary transition-colors">
+              View all logs <ArrowRight className="w-3 h-3" />
+            </Link>
+          )}
+        </div>
 
-        {/* Telemetry Stats */}
-        <div className="lg:col-span-2 grid grid-cols-2 gap-4">
-          <Card className="flex flex-col justify-center border-primary/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-muted-foreground flex items-center">
-                <Clock className="w-4 h-4 mr-2" /> Uptime
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-mono text-primary font-light tracking-wider drop-shadow-[0_0_8px_rgba(0,229,255,0.5)]">
-                {formatUptime(agent?.uptime)}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="flex flex-col justify-center border-success/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-muted-foreground flex items-center">
-                <CheckCircle2 className="w-4 h-4 mr-2" /> Tasks Completed
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-mono text-success font-light tracking-wider drop-shadow-[0_0_8px_rgba(0,255,100,0.5)]">
-                {agent?.completedCount || 0}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="col-span-2 bg-secondary/50 border-border">
-            <CardHeader className="pb-2 border-b border-border/50 mb-4">
-              <CardTitle className="text-sm flex items-center justify-between">
-                <span className="flex items-center text-muted-foreground"><Activity className="w-4 h-4 mr-2" /> Current Objective</span>
-                <Link href="/tasks" className="text-xs text-primary hover:underline flex items-center">View Queue <ArrowRight className="w-3 h-3 ml-1"/></Link>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {agent?.currentTask ? (
-                <div className="font-mono text-lg text-foreground border-l-2 border-primary pl-4 py-1 bg-primary/5 rounded-r-md">
-                  {agent.currentTask}
-                </div>
-              ) : (
-                <div className="font-mono text-muted-foreground italic border-l-2 border-muted-foreground/30 pl-4 py-1">
-                  Awaiting instructions...
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        {/* UP NEXT */}
+        <div>
+          <SectionHeader label="Up next" count={pending.length} accent="sky" />
+          <div className="space-y-2 mt-3">
+            {pending.length === 0 ? (
+              <Empty label="Queue is empty" />
+            ) : pending.slice(0, 6).map((t, i) => (
+              <TaskRow key={t.id} title={t.title} priority={t.priority} meta={`#${i + 1} in queue`} />
+            ))}
+          </div>
+          {pending.length > 6 && (
+            <Link href="/tasks" className="flex items-center gap-1 mt-3 text-xs font-mono text-muted-foreground hover:text-primary transition-colors">
+              +{pending.length - 6} more <ArrowRight className="w-3 h-3" />
+            </Link>
+          )}
         </div>
       </div>
+    </div>
+  );
+}
 
-      {/* Bottom Section: Logs & Quick info */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="border-border">
-          <CardHeader className="border-b border-border mb-4 flex flex-row items-center justify-between">
-            <CardTitle>Recent Activity</CardTitle>
-            <Link href="/logs" className="text-xs text-primary font-mono hover:underline">VIEW_ALL</Link>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 font-mono text-xs">
-              {logs && logs.length > 0 ? logs.map(log => (
-                <div key={log.id} className="flex gap-3 pb-2 border-b border-border/30 last:border-0">
-                  <span className="text-muted-foreground whitespace-nowrap opacity-60">
-                    {format(new Date(log.createdAt), 'HH:mm:ss')}
-                  </span>
-                  <span className={cn(
-                    "flex-1",
-                    log.level === 'error' ? 'text-destructive' :
-                    log.level === 'warning' ? 'text-warning' :
-                    log.level === 'success' ? 'text-success' : 'text-primary/80'
-                  )}>
-                    {log.message}
-                  </span>
-                </div>
-              )) : (
-                <div className="text-muted-foreground text-center py-4">No recent activity</div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+function SectionHeader({ label, count, accent }: { label: string; count: number; accent: "emerald" | "red" | "sky" }) {
+  const colors = {
+    emerald: "text-emerald-400 border-emerald-400/30",
+    red: "text-red-400 border-red-400/30",
+    sky: "text-sky-400 border-sky-400/30",
+  };
+  return (
+    <div className="flex items-center justify-between pb-2 border-b border-border">
+      <span className="text-xs font-mono uppercase tracking-widest text-muted-foreground">{label}</span>
+      <span className={cn("text-xs font-mono font-bold tabular-nums px-1.5 py-0.5 rounded border", colors[accent])}>
+        {count}
+      </span>
+    </div>
+  );
+}
 
-        <Card className="border-border">
-          <CardHeader className="border-b border-border mb-4">
-            <CardTitle>Queue Overview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center text-sm font-mono border-b border-border/50 pb-2">
-                <span className="text-muted-foreground">Pending Tasks</span>
-                <span className="text-primary text-lg">{tasks?.filter(t => t.status === 'pending').length || 0}</span>
-              </div>
-              <div className="flex justify-between items-center text-sm font-mono border-b border-border/50 pb-2">
-                <span className="text-muted-foreground">Failed Operations</span>
-                <span className="text-destructive text-lg">{agent?.errorCount || 0}</span>
-              </div>
-              <div className="flex justify-between items-center text-sm font-mono pb-2">
-                <span className="text-muted-foreground">Total In Queue</span>
-                <span className="text-foreground text-lg">{agent?.taskCount || 0}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+function TaskRow({ title, priority, meta, pulse }: { title: string; priority: string; meta: string; pulse?: boolean }) {
+  return (
+    <div className="group flex items-start gap-3 px-3 py-2.5 rounded border border-border/50 bg-card/30 hover:border-border hover:bg-card/60 transition-all">
+      {pulse && <span className="mt-1 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />}
+      {!pulse && <span className="mt-1 w-1.5 h-1.5 rounded-full bg-zinc-700 shrink-0" />}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm text-foreground truncate leading-snug">{title}</p>
+        <p className="text-xs text-muted-foreground font-mono mt-0.5">{meta}</p>
       </div>
+      <span className={cn("text-[10px] font-mono font-bold uppercase px-1.5 py-0.5 rounded border shrink-0 mt-0.5", priorityColor[priority] ?? priorityColor.low)}>
+        {priorityLabel[priority] ?? priority}
+      </span>
+    </div>
+  );
+}
 
+function AttentionRow({ label, detail, severity, ts }: { label: string; detail: string; severity: "error" | "warning"; ts: string }) {
+  return (
+    <div className={cn(
+      "flex items-start gap-3 px-3 py-2.5 rounded border transition-all",
+      severity === "error"
+        ? "border-red-500/20 bg-red-500/5 hover:border-red-500/40"
+        : "border-yellow-400/20 bg-yellow-400/5 hover:border-yellow-400/40"
+    )}>
+      {severity === "error"
+        ? <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
+        : <AlertTriangle className="w-3.5 h-3.5 text-yellow-400 shrink-0 mt-0.5" />
+      }
+      <div className="flex-1 min-w-0">
+        <p className={cn("text-xs leading-snug truncate", severity === "error" ? "text-red-300" : "text-yellow-300")}>{label}</p>
+        <p className="text-[10px] font-mono text-muted-foreground mt-0.5">
+          {detail} · {formatDistanceToNow(new Date(ts), { addSuffix: true })}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Empty({ label, icon }: { label: string; icon?: "check" }) {
+  return (
+    <div className="flex items-center gap-2 px-3 py-4 text-xs font-mono text-muted-foreground">
+      {icon === "check" ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400/60" /> : <ChevronRight className="w-3.5 h-3.5 opacity-30" />}
+      {label}
     </div>
   );
 }
