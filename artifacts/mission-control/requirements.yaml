@@ -1,0 +1,12 @@
+packages:
+  "framer-motion": "For stunning page transitions, modal animations, and the agent pulse core graphic"
+  "clsx": "Utility for merging tailwind classes"
+  "tailwind-merge": "Utility for merging tailwind classes without conflicts"
+  "date-fns": "For elegant date and time formatting in the logs and agent uptime displays"
+
+images: []
+
+notes:
+  - "Importing all TanStack query hooks and types from the pre-generated @workspace/api-client-react"
+  - "Assuming React 19 / wouter for routing as requested"
+  - "Using Polling (refetchInterval) to simulate real-time updates for Logs and Agent Status"

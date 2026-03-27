@@ -16,6 +16,27 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
 
+## Artifacts
+
+### `artifacts/mission-control` (`@workspace/mission-control`)
+
+React + Vite frontend for Mission Control — a command center dashboard for openclaw agent Ben.
+
+- Pages: Dashboard, Task Queue, Activity Logs, Memory Bank
+- Polls `/api/agent` every 3s for live status
+- Uses `@workspace/api-client-react` hooks for all data
+- Dark command center aesthetic with framer-motion animations
+
+### `artifacts/api-server` (`@workspace/api-server`)
+
+Exposes REST endpoints for Mission Control:
+
+- `GET/POST /api/agent` — agent status and control
+- `POST /api/agent/control` — start/stop/pause/resume Ben
+- `GET/POST /api/tasks`, `PATCH/DELETE /api/tasks/:id` — task management
+- `GET/POST /api/logs` — activity log
+- `GET/POST /api/memory`, `DELETE /api/memory/:id` — memory/context
+
 ## Structure
 
 ```text
