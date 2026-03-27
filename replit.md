@@ -114,11 +114,20 @@ Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHea
 
 ### Pages (Mission Control)
 
-- **Overview** (`/`) — 3-column dashboard: Active Now, Needs Attention, Up Next
-- **Projects** (`/projects`) — Project tracking with status grouping (Active, Blocked, Planned, On Hold, Done). Blocked items surface first. Inline edit/delete. Create via "+ New project" form.
-- **Tasks** (`/tasks`) — Task list with priority and status management
-- **Logs** (`/logs`) — Activity log stream with level filtering
-- **Memory** (`/memory`) — Key/value memory store for Ben's context
+George's personal operating dashboard. Dark command-center aesthetic.
+
+- **Today** (`/`) — Daily homepage: active projects grid, quick capture bar, overdue/due-today tasks, today's schedule. Header shows live "X overdue · Y due today · Z active" summary.
+- **Projects** (`/projects`) — Status-grouped project list (Active/Blocked → Planned → On Hold → Done). Blocked first, inline edit/delete, "+New project" form.
+- **Project Detail** (`/projects/:id`) — Project header (status, priority, next step), tasks list for that project, add task with optional due date.
+- **Tasks** (`/tasks`) — Full task list with priority/due date/status/projectId columns.
+- **Calendar** (`/calendar`) — Week grid + day detail view. Click day to see/add events. Week navigation.
+- **Inbox** (`/inbox`) — Quick capture input + "To process" list + collapsible "Processed" section. Assign items to projects.
+
+### DB Tables
+- `tasks` — title, description, status, priority, due_date, project_id, created_at, updated_at, completed_at
+- `projects` — name, status, priority, owner, next_step, description, due_date, created_at, updated_at
+- `events` — title, date, start_time, end_time, description, location, created_at, updated_at
+- `inbox` — content, processed, project_id, created_at
 
 ### `scripts` (`@workspace/scripts`)
 

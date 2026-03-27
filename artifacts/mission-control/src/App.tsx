@@ -4,11 +4,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { Layout } from "@/components/Layout";
-import Dashboard from "@/pages/Dashboard";
+import Today from "@/pages/Today";
 import Projects from "@/pages/Projects";
+import ProjectDetail from "@/pages/ProjectDetail";
 import Tasks from "@/pages/Tasks";
-import Logs from "@/pages/Logs";
-import Memory from "@/pages/Memory";
+import Calendar from "@/pages/Calendar";
+import Inbox from "@/pages/Inbox";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -24,11 +25,12 @@ function Router() {
   return (
     <Layout>
       <Switch>
-        <Route path="/" component={Dashboard} />
+        <Route path="/" component={Today} />
         <Route path="/projects" component={Projects} />
+        <Route path="/projects/:id" component={ProjectDetail} />
         <Route path="/tasks" component={Tasks} />
-        <Route path="/logs" component={Logs} />
-        <Route path="/memory" component={Memory} />
+        <Route path="/calendar" component={Calendar} />
+        <Route path="/inbox" component={Inbox} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

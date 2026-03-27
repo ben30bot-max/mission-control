@@ -73,6 +73,8 @@ export interface Task {
   description?: string | null;
   status: TaskStatus;
   priority: TaskPriority;
+  dueDate?: string | null;
+  projectId?: number | null;
   createdAt: string;
   updatedAt: string;
   completedAt?: string | null;
@@ -92,6 +94,8 @@ export interface CreateTaskRequest {
   title: string;
   description?: string | null;
   priority?: CreateTaskRequestPriority;
+  dueDate?: string | null;
+  projectId?: number | null;
 }
 
 export type UpdateTaskRequestStatus =
@@ -120,6 +124,8 @@ export interface UpdateTaskRequest {
   description?: string | null;
   status?: UpdateTaskRequestStatus;
   priority?: UpdateTaskRequestPriority;
+  dueDate?: string | null;
+  projectId?: number | null;
 }
 
 export type LogEntryLevel = (typeof LogEntryLevel)[keyof typeof LogEntryLevel];
@@ -279,6 +285,54 @@ export interface DeleteProjectParams {
   id: number;
 }
 
+export interface CalendarEvent {
+  id: number;
+  title: string;
+  date: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  description?: string | null;
+  location?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateEventRequest {
+  title: string;
+  date: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  description?: string | null;
+  location?: string | null;
+}
+
+export interface UpdateEventRequest {
+  title?: string;
+  date?: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  description?: string | null;
+  location?: string | null;
+}
+
+export interface InboxItem {
+  id: number;
+  content: string;
+  processed: boolean;
+  projectId?: number | null;
+  createdAt: string;
+}
+
+export interface CreateInboxItemRequest {
+  content: string;
+  projectId?: number | null;
+}
+
+export interface UpdateInboxItemRequest {
+  processed?: boolean;
+  projectId?: number | null;
+}
+
 export type GetLogsParams = {
   limit?: number;
   level?: GetLogsLevel;
@@ -293,3 +347,7 @@ export const GetLogsLevel = {
   success: "success",
   all: "all",
 } as const;
+
+export type GetEventsParams = {
+  date?: string;
+};

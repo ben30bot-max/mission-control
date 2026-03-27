@@ -19,16 +19,23 @@ import type {
 import type {
   AgentControlRequest,
   AgentStatus,
+  CalendarEvent,
+  CreateEventRequest,
+  CreateInboxItemRequest,
   CreateLogRequest,
   CreateMemoryRequest,
   CreateProjectRequest,
   CreateTaskRequest,
+  GetEventsParams,
   GetLogsParams,
   HealthStatus,
+  InboxItem,
   LogEntry,
   MemoryItem,
   Project,
   Task,
+  UpdateEventRequest,
+  UpdateInboxItemRequest,
   UpdateProjectRequest,
   UpdateTaskRequest,
 } from "./api.schemas";
@@ -1019,6 +1026,679 @@ export const useDeleteMemory = <
   TContext
 > => {
   return useMutation(getDeleteMemoryMutationOptions(options));
+};
+
+/**
+ * @summary List calendar events
+ */
+export const getGetEventsUrl = (params?: GetEventsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/events?${stringifiedParams}`
+    : `/api/events`;
+};
+
+export const getEvents = async (
+  params?: GetEventsParams,
+  options?: RequestInit,
+): Promise<CalendarEvent[]> => {
+  return customFetch<CalendarEvent[]>(getGetEventsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetEventsQueryKey = (params?: GetEventsParams) => {
+  return [`/api/events`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetEventsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getEvents>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetEventsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getEvents>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetEventsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getEvents>>> = ({
+    signal,
+  }) => getEvents(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getEvents>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetEventsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getEvents>>
+>;
+export type GetEventsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List calendar events
+ */
+
+export function useGetEvents<
+  TData = Awaited<ReturnType<typeof getEvents>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetEventsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getEvents>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetEventsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create an event
+ */
+export const getCreateEventUrl = () => {
+  return `/api/events`;
+};
+
+export const createEvent = async (
+  createEventRequest: CreateEventRequest,
+  options?: RequestInit,
+): Promise<CalendarEvent> => {
+  return customFetch<CalendarEvent>(getCreateEventUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createEventRequest),
+  });
+};
+
+export const getCreateEventMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createEvent>>,
+    TError,
+    { data: BodyType<CreateEventRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createEvent>>,
+  TError,
+  { data: BodyType<CreateEventRequest> },
+  TContext
+> => {
+  const mutationKey = ["createEvent"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createEvent>>,
+    { data: BodyType<CreateEventRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createEvent(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateEventMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createEvent>>
+>;
+export type CreateEventMutationBody = BodyType<CreateEventRequest>;
+export type CreateEventMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create an event
+ */
+export const useCreateEvent = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createEvent>>,
+    TError,
+    { data: BodyType<CreateEventRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createEvent>>,
+  TError,
+  { data: BodyType<CreateEventRequest> },
+  TContext
+> => {
+  return useMutation(getCreateEventMutationOptions(options));
+};
+
+/**
+ * @summary Update an event
+ */
+export const getUpdateEventUrl = (id: number) => {
+  return `/api/events/${id}`;
+};
+
+export const updateEvent = async (
+  id: number,
+  updateEventRequest: UpdateEventRequest,
+  options?: RequestInit,
+): Promise<CalendarEvent> => {
+  return customFetch<CalendarEvent>(getUpdateEventUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateEventRequest),
+  });
+};
+
+export const getUpdateEventMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateEvent>>,
+    TError,
+    { id: number; data: BodyType<UpdateEventRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateEvent>>,
+  TError,
+  { id: number; data: BodyType<UpdateEventRequest> },
+  TContext
+> => {
+  const mutationKey = ["updateEvent"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateEvent>>,
+    { id: number; data: BodyType<UpdateEventRequest> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateEvent(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateEventMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateEvent>>
+>;
+export type UpdateEventMutationBody = BodyType<UpdateEventRequest>;
+export type UpdateEventMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update an event
+ */
+export const useUpdateEvent = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateEvent>>,
+    TError,
+    { id: number; data: BodyType<UpdateEventRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateEvent>>,
+  TError,
+  { id: number; data: BodyType<UpdateEventRequest> },
+  TContext
+> => {
+  return useMutation(getUpdateEventMutationOptions(options));
+};
+
+/**
+ * @summary Delete an event
+ */
+export const getDeleteEventUrl = (id: number) => {
+  return `/api/events/${id}`;
+};
+
+export const deleteEvent = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteEventUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteEventMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteEvent>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteEvent>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteEvent"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteEvent>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteEvent(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteEventMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteEvent>>
+>;
+
+export type DeleteEventMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete an event
+ */
+export const useDeleteEvent = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteEvent>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteEvent>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteEventMutationOptions(options));
+};
+
+/**
+ * @summary List inbox items
+ */
+export const getGetInboxUrl = () => {
+  return `/api/inbox`;
+};
+
+export const getInbox = async (options?: RequestInit): Promise<InboxItem[]> => {
+  return customFetch<InboxItem[]>(getGetInboxUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetInboxQueryKey = () => {
+  return [`/api/inbox`] as const;
+};
+
+export const getGetInboxQueryOptions = <
+  TData = Awaited<ReturnType<typeof getInbox>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getInbox>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetInboxQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getInbox>>> = ({
+    signal,
+  }) => getInbox({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getInbox>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetInboxQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getInbox>>
+>;
+export type GetInboxQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List inbox items
+ */
+
+export function useGetInbox<
+  TData = Awaited<ReturnType<typeof getInbox>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<Awaited<ReturnType<typeof getInbox>>, TError, TData>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetInboxQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Capture an inbox item
+ */
+export const getCreateInboxItemUrl = () => {
+  return `/api/inbox`;
+};
+
+export const createInboxItem = async (
+  createInboxItemRequest: CreateInboxItemRequest,
+  options?: RequestInit,
+): Promise<InboxItem> => {
+  return customFetch<InboxItem>(getCreateInboxItemUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createInboxItemRequest),
+  });
+};
+
+export const getCreateInboxItemMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createInboxItem>>,
+    TError,
+    { data: BodyType<CreateInboxItemRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createInboxItem>>,
+  TError,
+  { data: BodyType<CreateInboxItemRequest> },
+  TContext
+> => {
+  const mutationKey = ["createInboxItem"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createInboxItem>>,
+    { data: BodyType<CreateInboxItemRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createInboxItem(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateInboxItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createInboxItem>>
+>;
+export type CreateInboxItemMutationBody = BodyType<CreateInboxItemRequest>;
+export type CreateInboxItemMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Capture an inbox item
+ */
+export const useCreateInboxItem = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createInboxItem>>,
+    TError,
+    { data: BodyType<CreateInboxItemRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createInboxItem>>,
+  TError,
+  { data: BodyType<CreateInboxItemRequest> },
+  TContext
+> => {
+  return useMutation(getCreateInboxItemMutationOptions(options));
+};
+
+/**
+ * @summary Update inbox item (e.g. mark processed)
+ */
+export const getUpdateInboxItemUrl = (id: number) => {
+  return `/api/inbox/${id}`;
+};
+
+export const updateInboxItem = async (
+  id: number,
+  updateInboxItemRequest: UpdateInboxItemRequest,
+  options?: RequestInit,
+): Promise<InboxItem> => {
+  return customFetch<InboxItem>(getUpdateInboxItemUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateInboxItemRequest),
+  });
+};
+
+export const getUpdateInboxItemMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateInboxItem>>,
+    TError,
+    { id: number; data: BodyType<UpdateInboxItemRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateInboxItem>>,
+  TError,
+  { id: number; data: BodyType<UpdateInboxItemRequest> },
+  TContext
+> => {
+  const mutationKey = ["updateInboxItem"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateInboxItem>>,
+    { id: number; data: BodyType<UpdateInboxItemRequest> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateInboxItem(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateInboxItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateInboxItem>>
+>;
+export type UpdateInboxItemMutationBody = BodyType<UpdateInboxItemRequest>;
+export type UpdateInboxItemMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update inbox item (e.g. mark processed)
+ */
+export const useUpdateInboxItem = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateInboxItem>>,
+    TError,
+    { id: number; data: BodyType<UpdateInboxItemRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateInboxItem>>,
+  TError,
+  { id: number; data: BodyType<UpdateInboxItemRequest> },
+  TContext
+> => {
+  return useMutation(getUpdateInboxItemMutationOptions(options));
+};
+
+/**
+ * @summary Delete inbox item
+ */
+export const getDeleteInboxItemUrl = (id: number) => {
+  return `/api/inbox/${id}`;
+};
+
+export const deleteInboxItem = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteInboxItemUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteInboxItemMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteInboxItem>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteInboxItem>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteInboxItem"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteInboxItem>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteInboxItem(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteInboxItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteInboxItem>>
+>;
+
+export type DeleteInboxItemMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete inbox item
+ */
+export const useDeleteInboxItem = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteInboxItem>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteInboxItem>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteInboxItemMutationOptions(options));
 };
 
 /**

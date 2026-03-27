@@ -19,6 +19,10 @@ tags:
     description: Agent memory and context
   - name: projects
     description: Project tracking
+  - name: events
+    description: Calendar events and agenda
+  - name: inbox
+    description: Quick capture inbox
 paths:
   /healthz:
     get:
@@ -238,6 +242,151 @@ paths:
         "204":
           description: Memory item deleted
 
+  /events:
+    get:
+      operationId: getEvents
+      tags: [events]
+      summary: List calendar events
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Event list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CalendarEvent"
+    post:
+      operationId: createEvent
+      tags: [events]
+      summary: Create an event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEventRequest"
+      responses:
+        "201":
+          description: Event created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CalendarEvent"
+
+  /events/{id}:
+    patch:
+      operationId: updateEvent
+      tags: [events]
+      summary: Update an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateEventRequest"
+      responses:
+        "200":
+          description: Updated event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CalendarEvent"
+    delete:
+      operationId: deleteEvent
+      tags: [events]
+      summary: Delete an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Event deleted
+
+  /inbox:
+    get:
+      operationId: getInbox
+      tags: [inbox]
+      summary: List inbox items
+      responses:
+        "200":
+          description: Inbox items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InboxItem"
+    post:
+      operationId: createInboxItem
+      tags: [inbox]
+      summary: Capture an inbox item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInboxItemRequest"
+      responses:
+        "201":
+          description: Item captured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InboxItem"
+
+  /inbox/{id}:
+    patch:
+      operationId: updateInboxItem
+      tags: [inbox]
+      summary: Update inbox item (e.g. mark processed)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateInboxItemRequest"
+      responses:
+        "200":
+          description: Updated item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InboxItem"
+    delete:
+      operationId: deleteInboxItem
+      tags: [inbox]
+      summary: Delete inbox item
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Item deleted
+
   /projects:
     get:
       operationId: getProjects
@@ -381,6 +530,12 @@ components:
         priority:
           type: string
           enum: [low, medium, high, critical]
+        dueDate:
+          type: string
+          nullable: true
+        projectId:
+          type: integer
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -411,6 +566,12 @@ components:
           type: string
           enum: [low, medium, high, critical]
           default: medium
+        dueDate:
+          type: string
+          nullable: true
+        projectId:
+          type: integer
+          nullable: true
       required:
         - title
 
@@ -428,6 +589,12 @@ components:
         priority:
           type: string
           enum: [low, medium, high, critical]
+        dueDate:
+          type: string
+          nullable: true
+        projectId:
+          type: integer
+          nullable: true
 
     LogEntry:
       type: object
@@ -622,3 +789,121 @@ components:
           type: integer
       required:
         - id
+
+    CalendarEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        date:
+          type: string
+        startTime:
+          type: string
+          nullable: true
+        endTime:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - date
+        - createdAt
+        - updatedAt
+
+    CreateEventRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        date:
+          type: string
+        startTime:
+          type: string
+          nullable: true
+        endTime:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+      required:
+        - title
+        - date
+
+    UpdateEventRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        date:
+          type: string
+        startTime:
+          type: string
+          nullable: true
+        endTime:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+
+    InboxItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        content:
+          type: string
+        processed:
+          type: boolean
+        projectId:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - content
+        - processed
+        - createdAt
+
+    CreateInboxItemRequest:
+      type: object
+      properties:
+        content:
+          type: string
+        projectId:
+          type: integer
+          nullable: true
+      required:
+        - content
+
+    UpdateInboxItemRequest:
+      type: object
+      properties:
+        processed:
+          type: boolean
+        projectId:
+          type: integer
+          nullable: true

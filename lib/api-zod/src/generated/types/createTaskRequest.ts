@@ -11,4 +11,6 @@ export interface CreateTaskRequest {
   title: string;
   description?: string | null;
   priority?: CreateTaskRequestPriority;
+  dueDate?: string | null;
+  projectId?: number | null;
 }

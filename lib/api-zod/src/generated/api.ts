@@ -69,6 +69,8 @@ export const GetTasksResponseItem = zod.object({
     "cancelled",
   ]),
   priority: zod.enum(["low", "medium", "high", "critical"]),
+  dueDate: zod.string().nullish(),
+  projectId: zod.number().nullish(),
   createdAt: zod.date(),
   updatedAt: zod.date(),
   completedAt: zod.date().nullish(),
@@ -87,6 +89,8 @@ export const CreateTaskBody = zod.object({
   priority: zod
     .enum(["low", "medium", "high", "critical"])
     .default(createTaskBodyPriorityDefault),
+  dueDate: zod.string().nullish(),
+  projectId: zod.number().nullish(),
 });
 
 /**
@@ -104,6 +108,8 @@ export const UpdateTaskBody = zod.object({
     .enum(["pending", "in_progress", "completed", "failed", "cancelled"])
     .optional(),
   priority: zod.enum(["low", "medium", "high", "critical"]).optional(),
+  dueDate: zod.string().nullish(),
+  projectId: zod.number().nullish(),
 });
 
 export const UpdateTaskResponse = zod.object({
@@ -118,6 +124,8 @@ export const UpdateTaskResponse = zod.object({
     "cancelled",
   ]),
   priority: zod.enum(["low", "medium", "high", "critical"]),
+  dueDate: zod.string().nullish(),
+  projectId: zod.number().nullish(),
   createdAt: zod.date(),
   updatedAt: zod.date(),
   completedAt: zod.date().nullish(),
@@ -195,6 +203,120 @@ export const CreateMemoryBody = zod.object({
  * @summary Delete memory item
  */
 export const DeleteMemoryParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary List calendar events
+ */
+export const GetEventsQueryParams = zod.object({
+  date: zod.coerce.string().optional(),
+});
+
+export const GetEventsResponseItem = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  date: zod.string(),
+  startTime: zod.string().nullish(),
+  endTime: zod.string().nullish(),
+  description: zod.string().nullish(),
+  location: zod.string().nullish(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
+});
+export const GetEventsResponse = zod.array(GetEventsResponseItem);
+
+/**
+ * @summary Create an event
+ */
+export const CreateEventBody = zod.object({
+  title: zod.string(),
+  date: zod.string(),
+  startTime: zod.string().nullish(),
+  endTime: zod.string().nullish(),
+  description: zod.string().nullish(),
+  location: zod.string().nullish(),
+});
+
+/**
+ * @summary Update an event
+ */
+export const UpdateEventParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateEventBody = zod.object({
+  title: zod.string().optional(),
+  date: zod.string().optional(),
+  startTime: zod.string().nullish(),
+  endTime: zod.string().nullish(),
+  description: zod.string().nullish(),
+  location: zod.string().nullish(),
+});
+
+export const UpdateEventResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  date: zod.string(),
+  startTime: zod.string().nullish(),
+  endTime: zod.string().nullish(),
+  description: zod.string().nullish(),
+  location: zod.string().nullish(),
+  createdAt: zod.date(),
+  updatedAt: zod.date(),
+});
+
+/**
+ * @summary Delete an event
+ */
+export const DeleteEventParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary List inbox items
+ */
+export const GetInboxResponseItem = zod.object({
+  id: zod.number(),
+  content: zod.string(),
+  processed: zod.boolean(),
+  projectId: zod.number().nullish(),
+  createdAt: zod.date(),
+});
+export const GetInboxResponse = zod.array(GetInboxResponseItem);
+
+/**
+ * @summary Capture an inbox item
+ */
+export const CreateInboxItemBody = zod.object({
+  content: zod.string(),
+  projectId: zod.number().nullish(),
+});
+
+/**
+ * @summary Update inbox item (e.g. mark processed)
+ */
+export const UpdateInboxItemParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateInboxItemBody = zod.object({
+  processed: zod.boolean().optional(),
+  projectId: zod.number().nullish(),
+});
+
+export const UpdateInboxItemResponse = zod.object({
+  id: zod.number(),
+  content: zod.string(),
+  processed: zod.boolean(),
+  projectId: zod.number().nullish(),
+  createdAt: zod.date(),
+});
+
+/**
+ * @summary Delete inbox item
+ */
+export const DeleteInboxItemParams = zod.object({
   id: zod.coerce.number(),
 });
 

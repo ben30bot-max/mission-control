@@ -13,4 +13,6 @@ export interface UpdateTaskRequest {
   description?: string | null;
   status?: UpdateTaskRequestStatus;
   priority?: UpdateTaskRequestPriority;
+  dueDate?: string | null;
+  projectId?: number | null;
 }

@@ -1,18 +1,23 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, ListTodo, Database, Terminal, Cpu, FolderKanban } from "lucide-react";
+import { LayoutDashboard, FolderKanban, ListTodo, Calendar, Inbox, Cpu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Overview", icon: LayoutDashboard },
+  { href: "/", label: "Today", icon: LayoutDashboard },
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/tasks", label: "Tasks", icon: ListTodo },
-  { href: "/logs", label: "Logs", icon: Terminal },
-  { href: "/memory", label: "Memory", icon: Database },
+  { href: "/calendar", label: "Calendar", icon: Calendar },
+  { href: "/inbox", label: "Inbox", icon: Inbox },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
+
+  const isActive = (href: string) => {
+    if (href === "/") return location === "/";
+    return location.startsWith(href);
+  };
 
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden">
@@ -27,19 +32,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <nav className="flex-1 py-4 px-3 space-y-0.5">
           {NAV_ITEMS.map((item) => {
-            const isActive = location === item.href;
+            const active = isActive(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
                   "flex items-center gap-2.5 px-3 py-2 rounded text-sm font-mono transition-colors",
-                  isActive
+                  active
                     ? "text-foreground bg-white/5"
                     : "text-muted-foreground hover:text-foreground hover:bg-white/3"
                 )}
               >
-                <item.icon className={cn("w-4 h-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
+                <item.icon className={cn("w-4 h-4 shrink-0", active ? "text-primary" : "text-muted-foreground")} />
                 {item.label}
               </Link>
             );
