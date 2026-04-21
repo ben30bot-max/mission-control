@@ -6,6 +6,7 @@
   "scripts": {
     "hello": "tsx ./src/hello.ts",
     "seed": "tsx ./src/seed.ts",
+    "validate:automation-registry": "tsx ./src/validate-automation-registry.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
