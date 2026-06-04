@@ -43,12 +43,26 @@ function taskUrgencyScore(task: Task): number {
   return -(P_ORDER[task.priority] ?? 9);
 }
 
+function comparePrioritySignal(a: Task, b: Task): number {
+  const scoreDiff = taskUrgencyScore(a) - taskUrgencyScore(b);
+  if (scoreDiff !== 0) return scoreDiff;
+
+  if (a.status === "in_progress" && b.status !== "in_progress") return -1;
+  if (b.status === "in_progress" && a.status !== "in_progress") return 1;
+
+  const aDue = a.dueDate ?? "9999-12-31";
+  const bDue = b.dueDate ?? "9999-12-31";
+  if (aDue !== bDue) return aDue.localeCompare(bDue);
+
+  return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Today() {
-  const { data: projects } = useGetProjects({ query: { refetchInterval: 15000 } });
-  const { data: tasks } = useGetTasks({ query: { refetchInterval: 15000 } });
-  const { data: events } = useGetEvents({ query: { refetchInterval: 30000 } });
+  const { data: projects } = useGetProjects({ query: { queryKey: ["projects"], refetchInterval: 15000 } });
+  const { data: tasks } = useGetTasks({ query: { queryKey: ["tasks"], refetchInterval: 15000 } });
+  const { data: events } = useGetEvents(undefined, { query: { queryKey: ["events"], refetchInterval: 30000 } });
   const { mutate: createTask, isPending: creatingTask } = useCreateTask();
   const { mutate: captureInbox, isPending: capturingInbox } = useCreateInboxItem();
   const { mutate: updateTask } = useUpdateTask();
@@ -68,13 +82,18 @@ export default function Today() {
 
   // tasks — unified "needs action" list
   const activeTasks = (tasks ?? []).filter(t => t.status !== "completed" && t.status !== "cancelled");
+  const topPriorities = [...activeTasks]
+    .sort(comparePrioritySignal)
+    .slice(0, 3);
+
+  const projectMap = Object.fromEntries((projects ?? []).map(p => [p.id, p]));
 
   const needsActionTasks = activeTasks
     .filter(t => {
       const f = dueFlag(t);
       return f === "overdue" || f === "today" || t.priority === "critical" || t.priority === "high";
     })
-    .sort((a, b) => taskUrgencyScore(b) - taskUrgencyScore(a))
+    .sort(comparePrioritySignal)
     .slice(0, 8);
 
   // events
@@ -146,6 +165,33 @@ export default function Today() {
           )}
         </div>
       </div>
+
+      {/* ── COMPANY PRIORITIES ─────────────────────────────────────── */}
+      <section className="pt-6 pb-7">
+        <div className="flex items-center justify-between mb-4">
+          <Label text="Company priorities" />
+          <Link href="/tasks" className="text-[10px] font-mono text-muted-foreground/40 hover:text-primary transition-colors flex items-center gap-1">
+            All tasks <ArrowRight className="w-2.5 h-2.5" />
+          </Link>
+        </div>
+
+        {topPriorities.length === 0 ? (
+          <div className="rounded border border-border/40 px-4 py-6 text-center">
+            <p className="text-xs font-mono text-muted-foreground/40">No company priorities yet. Add or promote a real task.</p>
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {topPriorities.map((task, index) => (
+              <PriorityRow
+                key={task.id}
+                rank={index + 1}
+                task={task}
+                project={task.projectId ? projectMap[task.projectId] : undefined}
+              />
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* ── ACTIVE PROJECTS ─────────────────────────────────────────── */}
       {activeProjects.length > 0 && (
@@ -345,6 +391,42 @@ function ProjectRow({ project }: { project: Project }) {
         <ArrowRight className="w-3 h-3 text-muted-foreground/20 group-hover:text-primary/40 shrink-0 transition-colors" />
       </div>
     </Link>
+  );
+}
+
+function PriorityRow({ task, project, rank }: { task: Task; project?: Project; rank: number }) {
+  const flag = dueFlag(task);
+
+  const urgencyTag = (() => {
+    if (flag === "overdue") {
+      const days = differenceInCalendarDays(new Date(), parseISO(task.dueDate!));
+      return { label: days === 1 ? "1d overdue" : `${days}d overdue`, cls: "text-red-400 border-red-400/30 bg-red-400/5" };
+    }
+    if (flag === "today") return { label: "due today", cls: "text-yellow-400 border-yellow-400/30 bg-yellow-400/5" };
+    if (task.status === "in_progress") return { label: "in progress", cls: "text-primary border-primary/30 bg-primary/5" };
+    if (task.priority === "critical") return { label: "critical", cls: "text-red-400 border-red-400/30 bg-red-400/5" };
+    if (task.priority === "high") return { label: "high", cls: "text-orange-400 border-orange-400/30 bg-orange-400/5" };
+    return { label: task.priority, cls: "text-zinc-400 border-zinc-700 bg-zinc-800/20" };
+  })();
+
+  return (
+    <div className="flex items-center gap-3 rounded border border-border/40 px-3 py-3 hover:bg-white/[0.025] transition-colors">
+      <span className="w-5 text-center text-[10px] font-mono text-primary/70 shrink-0">{rank}</span>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-mono text-foreground truncate">{task.title}</div>
+        <div className="mt-1 flex items-center gap-2 text-[10px] font-mono text-muted-foreground/50">
+          {project && (
+            <span className="truncate">{project.name}</span>
+          )}
+          {task.dueDate && (
+            <span>{format(parseISO(task.dueDate), "MMM d")}</span>
+          )}
+        </div>
+      </div>
+      <span className={cn("text-[10px] font-mono px-1.5 py-0.5 rounded border shrink-0", urgencyTag.cls)}>
+        {urgencyTag.label}
+      </span>
+    </div>
   );
 }
 
