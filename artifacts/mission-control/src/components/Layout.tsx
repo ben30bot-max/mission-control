@@ -1,14 +1,17 @@
 import React from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, FolderKanban, ListTodo, Calendar, Inbox, Cpu } from "lucide-react";
+import { LayoutDashboard, FolderKanban, ListTodo, Calendar, Inbox, Cpu, BrainCircuit, Repeat, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/", label: "Today", icon: LayoutDashboard },
+  { href: "/team", label: "Team", icon: Users },
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/tasks", label: "Tasks", icon: ListTodo },
   { href: "/calendar", label: "Calendar", icon: Calendar },
   { href: "/inbox", label: "Inbox", icon: Inbox },
+  { href: "/skills", label: "Skills", icon: BrainCircuit },
+  { href: "/workflows", label: "Workflows", icon: Repeat },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

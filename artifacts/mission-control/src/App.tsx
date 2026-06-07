@@ -10,6 +10,9 @@ import ProjectDetail from "@/pages/ProjectDetail";
 import Tasks from "@/pages/Tasks";
 import Calendar from "@/pages/Calendar";
 import Inbox from "@/pages/Inbox";
+import Team from "@/pages/Team";
+import Skills from "@/pages/Skills";
+import Workflows from "@/pages/Workflows";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -31,6 +34,9 @@ function Router() {
         <Route path="/tasks" component={Tasks} />
         <Route path="/calendar" component={Calendar} />
         <Route path="/inbox" component={Inbox} />
+        <Route path="/team" component={Team} />
+        <Route path="/skills" component={Skills} />
+        <Route path="/workflows" component={Workflows} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
